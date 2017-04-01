@@ -1,6 +1,6 @@
 function build_myo_mex(sdk_path)
 %BUILD_MYO_MEX(SDK_PATH) - Builds myo_mex
-%   This functions builds the mex function myo_mex against the Windows
+%   This function builds the mex function myo_mex against the Windows
 %   Myo SDK with root directory located at sdk_path.
 %
 %   Currently, only Windows is supported in this script and the source code
@@ -42,6 +42,15 @@ end
 
 % build
 
+% compiler options
+comp_flags = '';
+cc = mex.getCompilerConfigurations;
+switch cc.Name
+  % case 'Microsoft Visual C++ 2012' % MSVC++ 2012 Pro
+  case 'MinGW64 Compiler (C++)' % just an guess from some verbose mex() output from a user using MinGWx64
+    comp_flags = 'CXXFLAGS=''$CXXFLAGS -std=c++11''';
+end
+
 % source files
 src_files = {...
   'myo_mex.cpp',...
@@ -49,8 +58,10 @@ src_files = {...
 
 for ii=1:length(src_files)
   % mex command (add ' -v -g' switches for verbose output and debug symbols)
-  cmd = sprintf('mex -O -I"%s" -L"%s" -l%s %s',...
-    inc_path,lib_path,lib_name,src_files{ii});
+  cmd = sprintf('mex -O %s -I"%s" -L"%s" -l%s %s',...
+    comp_flags,...
+    inc_path,lib_path,lib_name,...
+    src_files{ii});
   fprintf('\nEvaluating mex command:\n\t''%s''\n',cmd);
   try
     eval(cmd);
